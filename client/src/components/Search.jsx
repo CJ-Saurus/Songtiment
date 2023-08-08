@@ -1,36 +1,39 @@
-import axios from 'axios';
-import { useState } from 'react';
-import { SectionWrapper } from '../hoc';
-
-const API_BASE_URL = '/api';
+import React, { useState } from "react";
+import axios from "axios";
+import { SectionWrapper } from "../hoc";
 
 const Search = () => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [lyrics, setLyrics] = useState('');
+    const [searchText, setSearchText] = useState(""); // Initialize state
+    const [sentimentResult, setSentimentResult] = useState(null); // Initialize state
 
-    const handleInputChange = (event) => {
-        setSearchTerm(event.target.value);
-    };
-
-    const handleFormSubmit = async (event) => {
-        event.preventDefault();
+    const handleSearch = async (e) => {
+        e.preventDefault();
 
         try {
-            const response = await axios.post(`${API_BASE_URL}/search`, {
-                searchTerm,
+            const response = await axios.get('https://twinword-sentiment-analysis.p.rapidapi.com/analyze/', {
+                params: {
+                    text: searchText
+                },
+                headers: {
+                    'X-RapidAPI-Key': 'beb832eb9emsh0ba22b478ef7f14p194d29jsn3812d0e6091d',
+                    'X-RapidAPI-Host': 'twinword-sentiment-analysis.p.rapidapi.com'
+                }
             });
 
-            const data = response.data;
-            setLyrics(data.lyrics);
+            setSentimentResult(response.data);
         } catch (error) {
-            console.error(error);
-            setLyrics('Lyrics not found.');
+            if (error.response) {
+                console.error("API responded with:", error.response.status, error.response.data);
+            } else if (error.request) {
+                console.error("No response received:", error.request);
+            } else {
+                console.error("Error during request setup:", error.message);
+            }
         }
     };
 
-
     return (
-        <form onSubmit={handleFormSubmit}>
+        <form onSubmit={handleSearch}>
             <label htmlFor="default-search" className="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">Search</label>
             <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -44,17 +47,20 @@ const Search = () => {
                     className="block w-full p-4 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                     placeholder="Search song"
                     required
-                    value={searchTerm}
-                    onChange={handleInputChange}
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
                 />
-                <button type="submit" className="text-white absolute right-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Search</button>
+                <button
+                    type="submit"
+                    className="text-white absolute right-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                >
+                    Search
+                </button>
             </div>
-            {lyrics && (
-                <div>
-                    <h2 className="text-xl font-bold mt-4">Lyrics</h2>
-                    <pre className="text-sm text-gray-600 bg-gray-100 p-4 mt-2 overflow-auto rounded-lg">
-                        {lyrics}
-                    </pre>
+            {sentimentResult && (
+                <div className="mt-4">
+                    <p>Sentiment: {sentimentResult.type}</p>
+                    <p>Score: {sentimentResult.score}</p>
                 </div>
             )}
         </form>
