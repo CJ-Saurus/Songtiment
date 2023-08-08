@@ -10,9 +10,9 @@ const app = express();
 
 app.use(express.json());
 // app.use(cors());
-// Other routes and middleware can be added here...
 
-// Include the searchRoutes
+
+
 // app.use('/api', searchRoutes);
 
 app.post('/comment', async (req, res) => {
